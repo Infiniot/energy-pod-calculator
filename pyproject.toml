@@ -1,0 +1,143 @@
+[project]
+name = "DITM-EPBCC-API"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Vivianne Dijkstra",email = "Vdijkstra@infiniot.nl"}
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = ">=0.115.12,<0.116.0"
+uvicorn = ">=0.34.0,<0.35.0"
+requests = ">=2.32.4,<3.0.0"
+python-decouple = ">=3.8,<4.0"
+pandas = ">=2.3.1,<3.0.0"
+numpy = ">=2.3.1,<3.0.0"
+python-multipart = ">=0.0.20,<0.0.21"
+pulp = {extras = ["highs"], version = "^3.3.0"}
+matplotlib = ">=3.10.6,<4.0.0"
+openpyxl = "^3.1.5"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.9.3"
+mypy = "^1.14.1"
+pytest = "^8.3.4"
+pytest-azurepipelines = "^1.0.5"
+pytest-cov = "^6.0.0"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# This is the default configuration for Ruff: https://docs.astral.sh/ruff/configuration/
+# Explicitly defined in the toml file for clarity.
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "migrations"
+]
+
+# Same as Black.
+line-length = 120
+indent-width = 4
+
+# Assume Python 3.8 as a minimum for recommending code upgrades.
+target-version = "py310"
+
+[tool.ruff.lint]
+# By default we enable all ruff linting rules (present and future)
+select = ["ALL"]
+
+# Any rules that we don't want to check on are to be explicitly excluded here.
+# Preferably this list is as small as possible.
+# The following rules are disabled based on best practices for using ruff as a formatter:
+# W191, E111, E114, D206, D300, Q000, Q001, Q002, Q003, COM812, COM819, ISC001, ISC002
+# See: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules for more details.
+ignore = ["PLR0913", "W191", "E111", "E114", "E117", "D206", "D300", "Q000", "Q001", "Q002", "Q003", "COM812", "COM819", "ISC001", "ISC002", "TC001", "N806"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+#
+# This is currently disabled by default, but it is planned for this
+# to be opt-out in the future.
+docstring-code-format = false
+
+# Set the line length limit used when formatting code snippets in
+# docstrings.
+#
+# This only has an effect when the `docstring-code-format` setting is
+# enabled.
+docstring-code-line-length = "dynamic"
+
+# Ignores S101 ("Use of 'assert' detected") for the tests.
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+# pytest
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+addopts = [
+    "--import-mode=importlib",
+]
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[[tool.mypy.overrides]]
+module = ["decouple", "requests", "pandas", "pulp"]
+ignore_missing_imports = true

@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Configured Debug",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": ["src.app:app","--reload"]
+        },
+        {
+            "name": "Python: Run file custom",
+            "type": "python",
+            "module": "${command:extension.commandvariable.file.relativeFileDotsNoExtension}",
+            "request": "launch",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
