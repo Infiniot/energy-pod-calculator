@@ -1,0 +1,159 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage[shortlabels]{enumitem}
+
+\begin{document}
+
+\section*{Model Description}
+
+% --------------------------------------------------
+% TABLE OF INDICES, PARAMETERS, VARIABLES WITH SUBHEADERS
+% --------------------------------------------------
+\subsection*{Notation}
+
+\begin{table}[h!]
+      \centering
+      \makebox[\linewidth][c]{%
+            \begin{tabular}{ll}
+                  \toprule
+                  \textbf{Symbol}       & \textbf{Description}                                                                                                                        \\
+                  \midrule
+
+                  % ------------------- Sets ------------------------
+                  \multicolumn{2}{l}{\textbf{Sets}}                                                                                                                                   \\
+                  $t \in \mathcal{T}$   & Set of timesteps considered in the optimization, $\mathcal{T} = \{0, .., T\}$                                                               \\
+                  $n \in \mathcal{N}$   & Set of vehicles in the optimization                                                                                                         \\
+                  $d \in \mathcal{D}$   & Set of days in the problem, the starts and ends of each day are set such that each day                                                      \\
+                                        & contains one charging transaction per vehicle                                                                                               \\ [2pt]
+                  $t \in \mathcal{T}_d$ & Set of timesteps corresponding to day $d$                                                                                                   \\ [4pt]
+
+                  % ------------------- Parameters ------------------
+                  \multicolumn{2}{l}{\textbf{Parameters}}                                                                                                                             \\
+                  $\Delta t$            & constant length of each timestep                                                                                                            \\
+                  $c_{t}$               & Energy price per kWh at time $t$                                                                                                            \\
+                  $b_{t}$               & Baseload in kW at time $t$ for the company                                                                                                  \\
+                  $E^{dem}_{d}$         & The total charging demand on day $d$                                                                                                        \\
+                  $G$                   & Contract capacity of the energy connection in kW                                                                                            \\
+                  $H$                   & Connection capacity of the energy connection in kW                                                                                          \\
+                  $Q$                   & Total capacity of the battery in kWh                                                                                                        \\
+                  $\eta^{+},\eta^{-}$   & Relative loss of energy as a result of charging or discharging the battery respectively                                                     \\
+                  $p^+_t, p^-_t$        & Respectively the maximum and minimum charging speed at timestep $t$ in kW,                                                                  \\
+                                        & calculated as the sum of individual charging speed limits for all vehicles present in this timestep.                                        \\ [2pt]
+                  $p^*_B$               & The maximum charging/discharging speed of the battery                                                                                       \\
+                  $\rho$                & Cost of energy per kWh if the contracted value, $G$, is exceeded. Defined as $\displaystyle \rho = 3 \cdot \max_{{t \in \mathcal{T}}}  c_t$ \\[4pt]
+
+                  % ------------------- Decision Variables ----------
+                  \multicolumn{2}{l}{\textbf{Decision Variables}}                                                                                                                     \\
+                  $P^{CP}_{t}$          & Total charging volume in kW in timestep $t$                                                                                                 \\
+                  $\phi_{t}$            & Binary variable: 1 if the pod is charging a vehicle in timestep $t$, 0 otherwise.                                                           \\
+                  $P^{B+}_t$            & Charging of the battery in timestep $t$.\                                                                                                   \\
+                  $P^{B-}_t$            & Disharging of the battery into one of the vehicles in timestep $t$.\                                                                        \\
+                                        & \textit{note: negative value indicates discharging of the battery}                                                                          \\ [2pt]
+                  $P^{pen}_{t}$         & Charging in kW above the contracted limit in timestep $t$                                                                                   \\
+                                        & \textit{note: when the contracted capacity is equal to the connection capacity, this variable can be ignored.}                              \\ [2pt]
+                  $Q$                   & Size of the battery, in steps of 100 kWh.                                                                                                   \\
+                                        & \textit{note: $Q$ is defined as $100 \cdot q$, where $q \in \mathbb{N}$.}                                                                   \\ [2pt]
+                  $SoC_t$               & State of charge of the battery, a value between 0 and 1 indicating the fraction of total capacity left at timestep $t$                      \\[4pt]
+
+
+                  \bottomrule
+            \end{tabular}%
+      }
+\end{table}
+\pagebreak
+% --------------------------------------------------
+% OBJECTIVE
+% --------------------------------------------------
+\subsection*{Mathematical Formulation}
+
+\textbf{Objective function:}
+
+\begin{align}
+      \min \quad & \sum_{t \in \mathcal{T}} c_{t} \Delta t (P^{CP}_{t} + P^{B+}_t - P^{B-}_t) + \rho \Delta t P^{pen}_t
+\end{align}
+
+% --------------------------------------------------
+% CONSTRAINTS
+% --------------------------------------------------
+\textit{Subject to:}
+
+\begin{align}
+      \sum_{t \in \mathcal{T}_d} \Delta t P^{CP}_{t} & =  E^{dem}_{d}
+                                                     &                                                                                                & \forall d \in \mathcal{D} \\
+      P^{CP}_{t}                                     & \le p^{+}_t \phi_{t}
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      P^{CP}_{t}                                     & \ge p^{-}_t \phi_{t}
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      P^{B+}_{t}                                     & \le p^{*}_B
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      P^{B+}_{t}                                     & \ge 0
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      P^{B-}_{t}                                     & \le p^{*}_B
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      P^{B-}_{t}                                     & \ge 0
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      SoC_{t+1}                                      & = SoC_t + \Delta t \Big( P^{B+}_t (1 - \eta^{+} ) - \frac{ P^{B-}_t }{ (1 - \eta^{-} ) } \Big)
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      SoC_{t}                                        & \ge 0
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      SoC_{t}                                        & \le Q
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      SoC_{0}                                        & = SoC_{T}
+                                                     &                                                                                                &                           \\
+      Q                                              & \ge 100
+                                                     &                                                                                                &                           \\
+      Q                                              & \le 1000
+                                                     &                                                                                                &                           \\
+      G                                              & \ge  P^{CP}_{t} + P^{B+}_{t} - P^{B-}_{t} + b_t - P^{pen}_{t}
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      P^{pen}_{t}                                    & \ge 0
+                                                     &                                                                                                & \forall t \in \mathcal{T} \\
+      P^{pen}_{t}                                    & \le H - G
+                                                     &                                                                                                & \forall t \in \mathcal{T}
+\end{align}
+
+\begin{enumerate}[(1)]
+      \item[(1)] Minimize the sum of the costs for power that goes into the charge points to charge the vehicles, $P^{CP}_t$,
+            the power used to charge the battery, $P^{B}_t$, and the penalty costs for exceeding the contracted grid capacity, $P^{pen}_t$.
+
+      \item[(2)] The charging demand ($E^{dem}_d$) of each day, $d$ is met though the total charging volume, $P^{CP}_t$,
+            in the timesteps corresponding to that day, multiplied by the length of each timestep.
+
+            % at departure of the vehicle through the sum of the charge point power and the battery discharge power of that transaction, where $t_{\text{arr},n}$ and $t_{\text{dep},n}$ represent the arrival and departure time of transaction $n$, respectively.
+      \item[(3--4)] $P^{CP}_t$ is constrained by the minimum and maximum charging power of the vehicle ($p^-_{t}$ and $p^+_{t}$).
+            A minimum charging power is considered in the analysis to account for the fact that many EV models
+            need to be charged continuously above a specific minimum charging power to prevent it from turning to idle mode,
+            at which it does not respond to charging signals anymore.
+
+      \item[(5--8)] The battery charge/discharge power at time $t$, $P^{B}_{t}$,
+            is constrained by the maximum discharge capacity $- p^{*}_B$ of the battery
+            and the maximum charge capacity $p^{*}_B$.
+
+      \item[(9)] The State of Charge of the battery at time $t$, $SoC_t$, determines how full the battery is at that time $t$,
+            The state of charge at time $t+1$ is the sum of $SoC_t$ plus the positive charge sent to the battery, $P^{B+}_{t}$.
+            However, because of the battery inefficiency, we lose $\eta^{+}$ of this charge. Similarly, we subtract the negative charge
+            going from the battery into a vehicle, $P^{B-}_{t}$. And we also take the efficiency of discharging the battery, $\eta^{-}$,
+            into account here. We multiply by $\Delta t$ to account for the amount of time the battery is receiving or delivering charge.
+
+      \item[(10--11)] The State of Charge is between 0 and the chosen battery capacity $Q$ for each timestep $t$.
+
+      \item[(12)] We force the state of charge of the battery to be the same in the first timestep as in the last timestep.
+
+      \item[(13--14)] The battery capacity, $Q$, can be between 100 kWh and 1000 kWh.
+
+      \item[(15)] This constraint makes sure that the charge exceeding the contracted capacity, $P^{pen}_t$,
+            is always at least the difference between the demanded electrity at timestep $t$ and the contracted capacity, $G$.
+            If the charging into
+
+      \item[(16)] The contracted capacity exceedance must be positive.
+
+      \item[(17)] The contracted capacity exceedance cannot be so high that the total energy draw at timestep $t$ exceeds the connection capacity $H$.
+
+      \item[(16--17)] These constraint are dropped in the special case when $G = H$.
+            This can be done because $P^{pen}_t$ will have to be zero for all $t$ in this case.
+\end{enumerate}
+
+\end{document}
+
+[]
