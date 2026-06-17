@@ -1,0 +1,178 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+env:
+  PYTHON_VERSION: "3.13"
+  PROJECT_ROOT: ${{ github.workspace }}
+  VM_IMAGE: ubuntu-latest
+  FILE_PATH_ENERGY_PRICES: input/energy_prices/energy_prices_2024.csv
+  FILE_PATH_BASELOADS: input/ko_profiles/
+
+jobs:
+  hooks:
+    name: Run pre-commit hooks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Use Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Runs select pre-commit hooks
+        run: |
+          pip install pre-commit
+          # SKIP environment variable is set to exclude specific pre-commit hooks.
+          # 'ruff', 'ruff-format' and 'mypy': Already executed in the pipeline.
+          # 'poetry-lock': Ensures that the poetry.lock file is updated correctly.
+          SKIP=ruff,ruff-format,mypy,poetry-lock pre-commit run --all-files
+
+  format-check:
+    name: Run ruff format code format check
+    runs-on: ubuntu-latest
+    needs: hooks
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Use Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install app dependencies
+        run: |
+          pipx install poetry
+          poetry config virtualenvs.in-project true
+          poetry install
+
+      - name: Run ruff format
+        run: |
+          mkdir logs
+          poetry run ruff format --diff > logs/ruff-format.log
+
+      - name: Upload ruff format log
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ruff format log
+          path: logs
+
+  lint-and-sast:
+    name: Run ruff check linter and SAST bandit rules
+    runs-on: ubuntu-latest
+    needs: hooks
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Use Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install app dependencies
+        run: |
+          pipx install poetry
+          poetry config virtualenvs.in-project true
+          poetry install
+
+      - name: Runs ruff check
+        run: |
+          mkdir logs
+          poetry run ruff check --no-cache ${{ github.workspace }}/src/ > logs/ruff-lint.log
+
+      - name: Upload ruff check log
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ruff check log
+          path: logs
+
+  type-check:
+    name: Run Mypy typechecker
+    runs-on: ubuntu-latest
+    needs: hooks
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Use Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install app dependencies
+        run: |
+          pipx install poetry
+          poetry config virtualenvs.in-project true
+          poetry install
+
+      - name: Run Mypy
+        run: |
+          poetry run mypy src tests
+
+  dependency-lock-check:
+    name: Run poetry check
+    runs-on: ubuntu-latest
+    needs: hooks
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Use Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install app dependencies
+        run: |
+          pipx install poetry
+          poetry config virtualenvs.in-project true
+          poetry install
+
+      - name: Run poetry check
+        run: |
+          poetry check
+
+  pytest:
+    name: Run pytest
+    runs-on: ubuntu-latest
+    needs:
+      - format-check
+      - lint-and-sast
+      - type-check
+      - dependency-lock-check
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Use Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install app dependencies
+        run: |
+          pipx install poetry
+          poetry config virtualenvs.in-project true
+          poetry install
+
+      - name: Run pytest
+        run: |
+          poetry run python -m pytest --cov . --cov-report html
