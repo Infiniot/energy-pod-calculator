@@ -81,6 +81,13 @@ target-version = "py310"
 # By default we enable all ruff linting rules (present and future)
 select = ["ALL"]
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Ignores S101 ("Use of 'assert' detected") for the tests.
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
 # Any rules that we don't want to check on are to be explicitly excluded here.
 # Preferably this list is as small as possible.
 # The following rules are disabled based on best practices for using ruff as a formatter:
@@ -123,20 +130,12 @@ docstring-code-format = false
 # enabled.
 docstring-code-line-length = "dynamic"
 
-# Ignores S101 ("Use of 'assert' detected") for the tests.
-# [tool.ruff.lint.per-file-ignores]
-# "tests/*" = ["S101"]
-
 # pytest
 [tool.pytest.ini_options]
 pythonpath = [".", "src"]
 addopts = [
     "--import-mode=importlib",
 ]
-
-
-# [tool.ruff.lint.pydocstyle]
-# convention = "google"
 
 [[tool.mypy.overrides]]
 module = ["decouple", "requests", "pandas", "pulp"]
