@@ -99,9 +99,6 @@ ignore = ["PLR0913", "W191", "E111", "E114", "E117", "D206", "D300", "Q000", "Q0
 fixable = ["ALL"]
 unfixable = []
 
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
