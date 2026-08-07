@@ -1,13 +1,13 @@
 # EnergyPod Calculator
-The EnergyPod Calculator is a repository containing an API that can be used to calculate the business case of an EnergyPod.
+The EnergyPod Calculator is a repository containing an API that can be used to calculate the business case for purchasing an EnergyPod. An EnergyPod is a smart charging system containing a battery and several charge points, that can be controlled to obtain a cost- and energy-saving charging solution. It is developed as part of the [DITM project(https://brainporteindhoven.com/nl/innovatie/mobility/programmabureau-smart-green-mobility/digitale-infrastructuur-voor-toekomstbestendige-mobiliteit)], which is a collaboration between several companies and knowledge institutes focused on digital and future-proof mobility. The project is led by Brainport Eindhoven.
 
 ## About the project
- An EnergyPod is a charging system containing a battery and several charge points, that can be controlled to obtain a cost- and energy-saving charging solution. This tool aims to calculate the business case of an EnergyPod and provide an estimate for the payback time and potential savings. Two different scenario's are compared: a scenario with and one without the usage of an EnergyPod.
+This tool aims to calculate the business case for purchasing an EnergyPod and provide an estimate for the payback time and potential savings. Two different scenario's are compared: a scenario with and one without the usage of an EnergyPod.
 
  The most important features that are included in this tool:
- - **Loadbalancer**: Checks if the configured input fits within the provided grid connection for both the with and without EnergyPod scenario. If this is not the case, an updated grid connection is returned for both scenario's that ensures that there is a logical outcome in the subsequent steps.
- - **Optimization problem**: The battery power and charge point power usage in combination with energy prices and the configured input are fit into an optimization problem to minimize the total yearly energy costs for the scenario with EnergyPod.
- - **Cost calculations**: There are several modules to compute costs related to both scenario's, such as: the energy costs, grid tariffs, investment costs for charge points and battery and the ERE savings. Based on these costs, the yearly savings and payback time are determined.
+ - **Load balancer**: A load balancer mechanism is built to distribute the energy demand over the charge site during the charging period. It can be used to check if the configured input fits within the provided grid connection for both the scenario with and without EnergyPod. If it does not fit, the output of the load balancer can be used to determine the minimum required grid connection for both scenario's, ensuring that there is a logical outcome in the subsequent steps.
+ - **Optimization problem**: The battery power usage and charge point power usage in combination with energy prices and the configured input are fit into an optimization problem to minimize the total yearly energy costs for the scenario with EnergyPod.
+ - **Cost calculations**: There are several modules to compute costs related to both scenarios, such as energy costs, grid tariffs, investment costs for charge points and battery and the ERE savings. Based on these costs, the yearly savings and payback time are determined.
 
 ## Prerequisites
 You need the following installed on your local computer:
@@ -67,7 +67,7 @@ Documentation of the project is placed in the [`docs/`](./docs/) folder of the r
 Information related to the architecture of the EnergyPod Calculator API can be found in the [`docs/architecture`](./docs/architecture/) folder of this repository. This folder contains a detailed description of the overall structure of the API and also how to use each component separately. To test the functionalities of the API, we have developed an example notebook ([`src/example_notebook.ipynb`](./src/example_notebook.ipynb)) that takes you through the steps of the EnergyPod Calculator and how it is designed to be used as a whole. Each of the components and endpoints can also be used on their own. Feel free to test and adjust the code to fit your specific use case.
 
 ### Optimization
-An optimization problem is defined that serves as the foundation for the with EnergyPod scenario calculations. This optimization problem can be used to calculate the energy usage for a given input configuration for a whole year. The mathematical formulation of the optimization problem that is used to calculate the scenario with EnergyPod can be found in the [`docs/model`](./docs/model/) folder of this repository.
+An optimization problem is defined that serves as the foundation for calculations of energy consumption with an EnergyPod. This optimization problem can be used to calculate the energy usage for a given input configuration for a whole year. The mathematical formulation of the optimization problem that is used to calculate the scenario with EnergyPod can be found in the [`docs/model`](./docs/model/) folder of this repository.
 
 ### Toolchain
 Information related to the toolchain of the EnergyPod Calculator can be found in the [`docs/toolchain`](./docs/toolchain/) folder of this repository.
@@ -92,16 +92,16 @@ Additional to the energy prices, we consider the grid tariffs. The prices for th
 - Enexis: [large consumer](https://www.enexis.nl/zakelijk/aansluitingen/tarieven/tariefbladen), [small consumer](https://www.enexis.nl/tarieven/2026-elektriciteit-maandelijks)
 - Coteq: [large consumer and small consumer](https://coteqnetbeheer.nl/actuele-tarieven)
 - Rendo: [large consumer and small consumer](https://www.rendonetwerken.nl/zakelijk/tarieven-facturen/)
-- Westland: [large consumer](https://westlandinfra.nl/grootzakelijk/tarieven/bekijk-de-huidige-tarieven/), [small consumer](https://westlandinfra.nl/thuis-kleinzakelijk/tarieven/bekijk-de-huidige-tarieven/).
+- Westland Infra: [large consumer](https://westlandinfra.nl/grootzakelijk/tarieven/bekijk-de-huidige-tarieven/), [small consumer](https://westlandinfra.nl/thuis-kleinzakelijk/tarieven/bekijk-de-huidige-tarieven/).
 
 ## Assumptions
 Commonly used parameters throughout the EnergyPod Calculator API have been bundled in [`src/config.py`](./src/config.py). These parameters have been given default values, but feel free to adjust these parameters to fit your specific use case. Examples of commonly used parameters that you can adjust are:
-- **Battery step size**: The battery energy capacity can be determined by the optimization. The optimization considers deterministic values for the battery energy capacity that are defined by: $step \cdot battery\_step\_size$, where $step$ can range from $0$ to $max\_battery\_steps$. Therefore, the lowest value for the battery energy capacity that is considered is equal to the battery step size.
-- **Maximum number of battery steps**: The maximum value for the battery energy capacity that is considered is equal to $max\_battery\_steps \cdot battery\_step\_size$.
-- **Battery price per kWh**: The investment costs for the battery energy capacity are determined by multiplying $battery\_price\_per\_kwh$ by the battery energy capacity.
-- **Charge point price per kW**: The investment costs for the charge point are determined by multiplying the $cp\_price\_per\_kW$ with the number of charge points and the power of a single charge point. The power of a single charge point can be provided via the configured input.
-- **Battery power loss for charging**: The battery power loss for charging is a factor that takes into account the loss of power when a battery is used for charging. This factor is battery specific and can be adjusted if the battery specifications are known.
-- **Battery power loss for discharging**: The battery power loss for discharging is a factor that takes into account the loss of power when a battery is used for discharging. This factor is battery specific and can be adjusted if the battery specifications are known.
+- **Battery step size**: The battery energy capacity can be determined by the optimization. The optimization considers deterministic values for the battery energy capacity that are defined by: `step` * `battery_step_size`, where `step` can range from $0$ to `max_battery_steps`. Therefore, the lowest value for the battery energy capacity that is considered is equal to the battery step size.
+- **Maximum number of battery steps**: The maximum value for the battery energy capacity that is considered is equal to `max_battery_steps` * `battery_step_size`.
+- **Battery price per kWh**: The investment costs for the battery energy capacity are determined by multiplying `battery_price_per_kwh` by the battery energy capacity. The price per kWh is given in euros.
+- **Charge point price per kW**: The investment costs for the charge point are determined by multiplying the `cp_price_per_kW` with the number of charge points and the power of a single charge point. The power of a single charge point can be provided via the configured input. The price per kW is given in euros.
+- **Battery power loss for charging**: The battery power loss for charging is a factor that takes into account the loss of power when a battery is used for charging. This factor is battery specific and can be adjusted if the battery specifications are known. The factor is a number between 0 and 1, where 0 means that there is no loss of power and 1 means that all power is lost.
+- **Battery power loss for discharging**: The battery power loss for discharging is a factor that takes into account the loss of power when a battery is used for discharging. This factor is battery specific and can be adjusted if the battery specifications are known. The factor is a number between 0 and 1, where 0 means that there is no loss of power and 1 means that all power is lost.
 
 ## Testing
 Integration and unit tests for the modules in [`src/application`](./src/application/) can be found in [`tests/`](./tests/) folder. All tests need to have passed before committing any new code.
